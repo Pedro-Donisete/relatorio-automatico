@@ -11,58 +11,63 @@ url = "https://api.ifollower.com.br/statistic/opened-report"
 
 headers = {
     "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTQxNSwicGVyZmlsIjoiQkkiLCJlbXByZXNhIjo2LCJpYXQiOjE3NTA0MjczNDEsImV4cCI6MTc4MTk4NDk0MX0.UrJiYQUm_hmUBMPelcBcGyctDT2ziIllNX5W8JXZETU",
-        "Content-Type": "application/json"
-        }
+    "Content-Type": "application/json"
+}
 
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+response = requests.get(url, headers=headers)
+response.raise_for_status()
 
-        data = response.json()
+data = response.json()
 
-        # Ajuste do JSON
-        if isinstance(data, dict):
-            for key in data:
-                    if isinstance(data[key], list):
-                                df = pd.json_normalize(data[key])
-                                            break
-                                                else:
-                                                        df = pd.json_normalize(data)
-                                                        else:
-                                                            df = pd.json_normalize(data)
+# =========================
+# Ajuste do JSON
+# =========================
+if isinstance(data, dict):
+    encontrou_lista = False
+    for key in data:
+        if isinstance(data[key], list):
+            df = pd.json_normalize(data[key])
+            encontrou_lista = True
+            break
 
-                                                            # =========================
-                                                            # CSV
-                                                            # =========================
-                                                            hoje = datetime.now().strftime("%Y-%m-%d_%H-%M")
-                                                            arquivo = f"relatorio_opened_{hoje}.csv"
+    if not encontrou_lista:
+        df = pd.json_normalize(data)
+else:
+    df = pd.json_normalize(data)
 
-                                                            df.to_csv(arquivo, index=False, encoding="utf-8-sig")
+# =========================
+# CSV
+# =========================
+hoje = datetime.now().strftime("%Y-%m-%d_%H-%M")
+arquivo = f"relatorio_opened_{hoje}.csv"
 
-                                                            # =========================
-                                                            # EMAIL (GMAIL)
-                                                            # =========================
-                                                            EMAIL_REMETENTE = "pedro.donpe777@gmail.com"
-                                                            EMAIL_SENHA = "puro rsei ject uwpw"
-                                                            EMAIL_DESTINO = "pedro.silva@craneww.com"
+df.to_csv(arquivo, index=False, encoding="utf-8-sig")
 
-                                                            msg = EmailMessage()
-                                                            msg["Subject"] = "Relatório Opened Report"
-                                                            msg["From"] = EMAIL_REMETENTE
-                                                            msg["To"] = EMAIL_DESTINO
-                                                            msg.set_content("Segue em anexo o relatório gerado automaticamente.")
+# =========================
+# EMAIL (GMAIL)
+# =========================
+EMAIL_REMETENTE = "pedro.donpe777@gmail.com"
+EMAIL_SENHA = "puro rsei ject uwpw"
+EMAIL_DESTINO = "pedro.silva@craneww.com"
 
-                                                            # Anexo CSV
-                                                            with open(arquivo, "rb") as f:
-                                                                msg.add_attachment(
-                                                                        f.read(),
-                                                                                maintype="text",
-                                                                                        subtype="csv",
-                                                                                                filename=arquivo
-                                                                                                    )
+msg = EmailMessage()
+msg["Subject"] = "Relatório Opened Report"
+msg["From"] = EMAIL_REMETENTE
+msg["To"] = EMAIL_DESTINO
+msg.set_content("Segue em anexo o relatório gerado automaticamente.")
 
-                                                                                                    # Envio via Gmail SMTP
-                                                                                                    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-                                                                                                        smtp.login(EMAIL_REMETENTE, EMAIL_SENHA)
-                                                                                                            smtp.send_message(msg)
+# Anexo CSV
+with open(arquivo, "rb") as f:
+    msg.add_attachment(
+        f.read(),
+        maintype="text",
+        subtype="csv",
+        filename=arquivo
+    )
 
-                                                                                                            print("✅ CSV gerado e enviado com sucesso!")
+# Envio via Gmail SMTP
+with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+    smtp.login(EMAIL_REMETENTE, EMAIL_SENHA)
+    smtp.send_message(msg)
+
+print("✅ CSV gerado e enviado com sucesso!")
