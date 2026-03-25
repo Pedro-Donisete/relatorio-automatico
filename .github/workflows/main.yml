@@ -1,0 +1,30 @@
+name: Relatorio Automatico
+
+on:
+  schedule:
+    - cron: '0 11 * * *'  # 08:00 da manhã no Brasil
+  workflow_dispatch:
+
+jobs:
+  executar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar bibliotecas
+        run: pip install -r requirements.txt
+
+      - name: Rodar script
+        env:
+          EMAIL_REMETENTE: ${{ secrets.EMAIL_REMETENTE }}
+          EMAIL_SENHA: ${{ secrets.EMAIL_SENHA }}
+          EMAIL_DESTINO: ${{ secrets.EMAIL_DESTINO }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+        run: python script.py
